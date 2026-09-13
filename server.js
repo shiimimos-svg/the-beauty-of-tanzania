@@ -34,11 +34,18 @@ let currentAnnouncement = "Karibu The Beauty of Tanzania - Gundua vivutio vizuri
 let messages = [];
 
 app.get('/', (req, res) => {
-  res.render('index', { posts, messages });
+  res.render('index', { posts, messages, announcement: currentAnnouncement });
 });
 
 app.get('/admin', (req, res) => {
-  res.render('admin', { posts, messages });
+  res.render('admin', { posts, messages, announcement: currentAnnouncement });
+});
+
+app.post('/admin/update-announcement', (req, res) => {
+  if (req.body.announcement) {
+    currentAnnouncement = req.body.announcement;
+  }
+  res.redirect('/admin');
 });
 
 app.post('/admin/add-post', upload.single('image'), (req, res) => {
