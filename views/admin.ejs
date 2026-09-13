@@ -75,6 +75,14 @@
 
     <div class="container">
         <h1>Dashboard ya Usimamizi</h1>
+<div style="margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px solid #ddd;">
+    <h3>Badilisha Tangazo la Kwenye Tovuti</h3>
+    <form action="/admin/update-announcement" method="POST">
+        <textarea name="announcement" rows="3" style="width: 100%; padding: 10px;" required><%= announcement %></textarea>
+        <br><br>
+        <button type="submit" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Sasisha Tangazo</button>
+    </form>
+</div>
 
         <div class="admin-grid">
             <!-- Sehemu ya Kuweka Picha Mpya -->
