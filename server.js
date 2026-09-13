@@ -29,6 +29,7 @@ let posts = [
   { id: 2, title: 'Serengeti National Park', description: 'Witness the great wildebeest migration.', imageUrl: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80' },
   { id: 3, title: 'Zanzibar Beaches', description: 'Crystal clear turquoise waters and historic Stone Town.', imageUrl: 'https://images.unsplash.com/photo-1588611934988-1bf30b5e4785?auto=format&fit=crop&w=800&q=80' }
 ];
+let currentAnnouncement = "Karibu The Beauty of Tanzania - Gundua vivutio vizuri vya utalii!";
 
 let messages = [];
 
