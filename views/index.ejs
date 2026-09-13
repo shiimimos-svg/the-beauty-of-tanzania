@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Beauty of Tanzania</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #111827;
+            --accent: #059669;
+            --bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #374151;
+            --gray: #6b7280;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        
+        header { background: var(--card-bg); border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.25rem; font-weight: 700; color: var(--primary); text-decoration: none; letter-spacing: -0.5px; }
+        .logo span { color: var(--accent); }
+        .nav-links a { color: var(--gray); text-decoration: none; margin-left: 2rem; font-weight: 500; font-size: 0.95rem; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--accent); }
 
+        .hero { text-align: center; padding: 5rem 1rem 3rem 1rem; max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 3rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; letter-spacing: -1px; }
+        .hero p { color: var(--gray); font-size: 1.15rem; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 2rem; }
+        .card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .card img { width: 100%; height: 260px; object-fit: cover; }
+        .card-content { padding: 1.5rem; }
+        .card-title { font-size: 1.2rem; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; }
+        .card-desc { color: var(--gray); font-size: 0.95rem; }
+
+        .contact-section { max-width: 600px; margin: 5rem auto 3rem auto; background: var(--card-bg); padding: 2.5rem; border-radius: 16px; border: 1px solid #e5e7eb; }
+        .contact-section h2 { font-size: 1.8rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; text-align: center; }
+        .contact-section p { text-align: center; color: var(--gray); margin-bottom: 2rem; font-size: 0.95rem; }
+        
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--primary); }
+        .form-control { width: 100%; padding: 0.75rem 1rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: var(--accent); }
+        textarea.form-control { resize: vertical; height: 120px; }
+        
+        .btn { background: var(--accent); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: background 0.2s; }
+        .btn:hover { background: #047857; }
+
+        footer { text-align: center; padding: 3rem; color: var(--gray); font-size: 0.9rem; border-top: 1px solid #e5e7eb; margin-top: 4rem; background: var(--card-bg); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .gallery-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">The Beauty of <span>Tanzania</span></a>
+            <div class="nav-links">
+                <a href="#gallery">Explore</a>
+                <a href="#contact">Contact</a>
+                <a href="/admin" style="color: var(--accent);">Admin Panel</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <h1>Discover the Magic of Tanzania</h1>
+        <p>Explore breathtaking landscapes, majestic wildlife, and rich cultures through our curated visual journey.</p>
+    </section>
+
+    <main class="container" id="gallery">
+        <div class="gallery-grid">
+            <% posts.forEach(post => { %>
+                <div class="card">
+                    <img src="<%= post.imageUrl %>" alt="<%= post.title %>">
+                    <div class="card-content">
+                        <h3 class="card-title"><%= post.title %></h3>
+                        <p class="card-desc"><%= post.description %></p>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <section class="contact-section" id="contact">
+            <h2>Plan Your Visit / Ask a Question</h2>
+            <p>Have questions about visiting Tanzania? Send us a message and we will get back to you.</p>
+            <form action="/contact" method="POST">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" name="email" class="form-control" required placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Message / Inquiry</label>
+                    <textarea name="message" class="form-control" required placeholder="Ask about safaris, beaches, mountains..."></textarea>
+                </div>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 The Beauty of Tanzania. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
