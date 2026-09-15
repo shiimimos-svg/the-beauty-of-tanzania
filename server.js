@@ -11,9 +11,9 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static('public')); // Kama una folda nyingine ya picha au CSS
+app.use(express.static('public'));
 
-// Muunganisho wa MongoDB
+// Muunganisho wa MongoDB ukiwa na opts za kuzuia kuchelewa
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
@@ -78,9 +78,9 @@ function adminAuth(req, res, next) {
     }
 }
 
-// UKURASA WA MWANZO (Unasoma kutoka folda ya views)
+// UKURASA WA MWANZO (Unasoma index.ejs kutoka views)
 app.get('/', (req, res) => {
-    res.render('index'); // Hakikisha ndani ya views kuna faili linaloitwa index.ejs (au badilisha jina liendane na faili lako)
+    res.render('index');
 });
 
 // 1. KUJISAJILI
@@ -209,20 +209,9 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// ADMIN ROUTE (IMELINDWA KALI NA NENOSIRI)
+// ADMIN ROUTE (IMELINDWA KALI NA NENOSIRI - Inasoma admin.ejs moja kwa moja)
 app.get('/admin', adminAuth, (req, res) => {
-    const adminPath = path.join(__dirname, 'views', 'admin.ejs'); // Kama admin ipo kwenye views pia
-    if (fs.existsSync(adminPath)) {
-        res.render('admin');
-    } else {
-        // Jaribu njia ya kawaida kama faili lipo nje ya views
-        const altPath = path.join(__dirname, 'admin.html');
-        if (fs.existsSync(altPath)) {
-            res.sendFile(altPath);
-        } else {
-            res.status(404).send("Ukurasa wa Admin haupatikani.");
-        }
-    }
+    res.render('admin');
 });
 
 app.listen(PORT, '0.0.0.0', () => {
