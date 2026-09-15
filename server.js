@@ -5,11 +5,15 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// MPANGILIO WA EJS NA VIEWS FOLDER
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static('public'));
+app.use(express.static('public')); // Kama una folda nyingine ya picha au CSS
 
-// Muunganisho wa MongoDB ukiwa na opts za kuzuia kuchelewa
+// Muunganisho wa MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
@@ -73,6 +77,11 @@ function adminAuth(req, res, next) {
         return res.status(401).send('Nenosiri au Jina la mtumiaji si sahihi.');
     }
 }
+
+// UKURASA WA MWANZO (Unasoma kutoka folda ya views)
+app.get('/', (req, res) => {
+    res.render('index'); // Hakikisha ndani ya views kuna faili linaloitwa index.ejs (au badilisha jina liendane na faili lako)
+});
 
 // 1. KUJISAJILI
 app.post('/api/signup', async (req, res) => {
@@ -202,11 +211,17 @@ app.post('/api/messages', async (req, res) => {
 
 // ADMIN ROUTE (IMELINDWA KALI NA NENOSIRI)
 app.get('/admin', adminAuth, (req, res) => {
-    const adminPath = path.join(__dirname, 'admin.html');
+    const adminPath = path.join(__dirname, 'views', 'admin.ejs'); // Kama admin ipo kwenye views pia
     if (fs.existsSync(adminPath)) {
-        res.sendFile(adminPath);
+        res.render('admin');
     } else {
-        res.status(404).send("Ukurasa wa Admin haupatikani kwenye folda kuu.");
+        // Jaribu njia ya kawaida kama faili lipo nje ya views
+        const altPath = path.join(__dirname, 'admin.html');
+        if (fs.existsSync(altPath)) {
+            res.sendFile(altPath);
+        } else {
+            res.status(404).send("Ukurasa wa Admin haupatikani.");
+        }
     }
 });
 
