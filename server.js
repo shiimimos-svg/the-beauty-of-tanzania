@@ -1,83 +1,132 @@
 const express = require('express');
-const multer = require('multer');
+const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = './public/uploads';
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage: storage });
-
-app.set('view engine', 'ejs');
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-let posts = [
-  { id: 1, title: 'Mount Kilimanjaro', description: 'The roof of Africa, snow-capped peak in Tanzania.', imageUrl: 'https://images.unsplash.com/photo-1609137144813-7e9453577fad?auto=format&fit=crop&w=800&q=80' },
-  { id: 2, title: 'Serengeti National Park', description: 'Witness the great wildebeest migration.', imageUrl: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80' },
-  { id: 3, title: 'Zanzibar Beaches', description: 'Crystal clear turquoise waters and historic Stone Town.', imageUrl: 'https://images.unsplash.com/photo-1588611934988-1bf30b5e4785?auto=format&fit=crop&w=800&q=80' }
-];
-let currentAnnouncement = "Karibu The Beauty of Tanzania - Gundua vivutio vizuri vya utalii!";
+// Muunganisho wa MongoDB
+const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
-let messages = [];
+mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+})
+.then(() => console.log("MongoDB Connected Successfully"))
+.catch(err => console.error("MongoDB Connection Error:", err));
 
-app.get('/', (req, res) => {
-  res.render('index', { posts, messages, announcement: currentAnnouncement });
+// Database Schemas
+const userSchema = new mongoose.Schema({
+    id: Number,
+    fullName: String,
+    whatsappNumber: { type: String, unique: true, index: true },
+    photoData: String,
+    seeking: String
 });
 
-app.get('/admin', (req, res) => {
-  res.render('admin', { posts, messages, announcement: currentAnnouncement });
+const messageSchema = new mongoose.Schema({
+    id: Number,
+    sender: { type: String, index: true },
+    receiver: { type: String, index: true },
+    text: String,
+    photoData: String,
+    read: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
 });
 
-app.post('/admin/update-announcement', (req, res) => {
-  if (req.body.announcement) {
-    currentAnnouncement = req.body.announcement;
-  }
-  res.redirect('/admin');
+const User = mongoose.model('User', userSchema);
+const Message = mongoose.model('Message', messageSchema);
+
+function sanitizePhoneNumber(phone) {
+    if (!phone) return "";
+    let cleaned = phone.trim();
+    if (cleaned.startsWith('+')) {
+        cleaned = '0' + cleaned.replace(/^\+\d{1,3}/, '');
+    }
+    return cleaned;
+}
+
+// ----------------------------------------------------
+// MWONGOZO WA ULINZI WA ADMIN (Basic Authentication)
+// ----------------------------------------------------
+function adminAuth(req, res, next) {
+    const authHeader = req.headers.authorization;
+    
+    // Hapa unaweza kubadilisha Username na Password unayotaka wewe
+    const ADMIN_USER = process.env.ADMIN_USER || "admin";
+    const ADMIN_PASS = process.env.ADMIN_PASS || "tanzania2026";
+
+    if (!authHeader) {
+        res.setHeader('WWW-Authenticate', 'Basic realm="Admin Area"');
+        return res.status(401).send('Unahitajika kuingiza nenosiri ili kuingia hapa.');
+    }
+
+    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+    const user = auth[0];
+    const pass = auth[1];
+
+    if (user === ADMIN_USER && pass === ADMIN_PASS) {
+        return next();
+    } else {
+        res.setHeader('WWW-Authenticate', 'Basic realm="Admin Area"');
+        return res.status(401).send('Nenosiri au Jina la mtumiaji si sahihi.');
+    }
+}
+
+// API Routes zote
+app.post('/api/signup', async (req, res) => {
+    try {
+        let { fullName, whatsappNumber, photoData, seeking } = req.body;
+        whatsappNumber = sanitizePhoneNumber(whatsappNumber);
+
+        const existingUser = await User.findOne({ whatsappNumber });
+        if (existingUser) {
+            return res.status(400).json({ error: "Namba hii imeshajisajili tayari!" });
+        }
+
+        if (!photoData || photoData.trim() === "") {
+            photoData = "https://via.placeholder.com/150";
+        }
+
+        const count = await User.countDocuments();
+        const newUser = new User({
+            id: count + 1,
+            fullName,
+            whatsappNumber,
+            photoData,
+            seeking: seeking || "Urafiki Tu"
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "Umefanikiwa kujisajili!", user: newUser });
+    } catch (err) {
+        res.status(500).json({ error: "Hitilafu ya seva wakati wa kujisajili." });
+    }
 });
 
-app.post('/admin/add-post', upload.single('image'), (req, res) => {
-  const { title, description } = req.body;
-  let imageUrl = '';
-  
-  if (req.file) {
-    imageUrl = `/uploads/${req.file.filename}`;
-  } else if (req.body.imageUrl) {
-    imageUrl = req.body.imageUrl;
-  }
-
-  if(title && imageUrl) {
-    posts.unshift({ id: Date.now(), title, description, imageUrl });
-  }
-  res.redirect('/admin');
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find({}).lean();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Imeshindikana kupata watumiaji." });
+    }
 });
 
-app.post('/admin/delete-post/:id', (req, res) => {
-  const postId = parseInt(req.params.id);
-  posts = posts.filter(p => p.id !== postId);
-  res.redirect('/admin');
+// ADMIN ROUTE IMELINDWA KALI (Imewekewa nenosiri)
+app.get('/admin', adminAuth, (req, res) => {
+    const adminPath = path.join(__dirname, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+        res.sendFile(adminPath);
+    } else {
+        res.status(404).send("Ukurasa wa Admin haupatikani kwenye folda kuu.");
+    }
 });
 
-app.post('/contact', (req, res) => {
-  const { name, email, message } = req.body;
-  if(name && message) {
-    messages.unshift({ id: Date.now(), name, email, message, date: new Date().toLocaleDateString() });
-  }
-  res.redirect('/#contact');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
