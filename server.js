@@ -13,7 +13,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB ukiwa na opts za kuzuia kuchelewa
+// Muunganisho wa MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
@@ -115,7 +115,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI
+// 2. KUPATA ORODHA YA WATUMIAJI (API)
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await User.find({}).lean();
@@ -209,9 +209,15 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// ADMIN ROUTE (IMELINDWA KALI NA NENOSIRI - Inasoma admin.ejs moja kwa moja)
-app.get('/admin', adminAuth, (req, res) => {
-    res.render('admin');
+// ADMIN ROUTE (IMELINDWA - Inatuma 'users' kwenye admin.ejs kuepusha hitilafu ya 500)
+app.get('/admin', adminAuth, async (req, res) => {
+    try {
+        const users = await User.find({}).lean();
+        res.render('admin', { users });
+    } catch (err) {
+        console.error("Admin Render Error:", err);
+        res.status(500).send("Hitilafu ya Server: " + err.message);
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
