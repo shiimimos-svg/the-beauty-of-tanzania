@@ -90,7 +90,7 @@ app.get('/admin', adminAuth, (req, res) => {
     });
 });
 
-// 3. SASISHA TANGAZO (Kimefungwa na Ulinzi)
+// 3. SASISHA TANGAZO (POST)
 app.post('/admin/update-announcement', adminAuth, (req, res) => {
     if (req.body.announcement) {
         siteData.announcement = req.body.announcement.trim();
@@ -98,7 +98,12 @@ app.post('/admin/update-announcement', adminAuth, (req, res) => {
     res.redirect('/admin');
 });
 
-// 4. ONGEZA PICHA/KIVUTIO KIPYA (Kimefungwa na Ulinzi)
+// 3.1 GET Fallback ya Tangazo (Kuzuia kosa la 404)
+app.get('/admin/update-announcement', adminAuth, (req, res) => {
+    res.redirect('/admin');
+});
+
+// 4. ONGEZA PICHA/KIVUTIO KIPYA (POST)
 app.post('/admin/add-post', adminAuth, upload.single('image'), (req, res) => {
     const { title, imageUrl, description } = req.body;
     
@@ -119,7 +124,12 @@ app.post('/admin/add-post', adminAuth, upload.single('image'), (req, res) => {
     res.redirect('/admin');
 });
 
-// 5. FUTA PICHA/KIVUTIO (Kimefungwa na Ulinzi)
+// 4.1 GET Fallback ya Add Post (Kuzuia kosa la 404)
+app.get('/admin/add-post', adminAuth, (req, res) => {
+    res.redirect('/admin');
+});
+
+// 5. FUTA PICHA/KIVUTIO
 app.post('/admin/delete-post/:id', adminAuth, (req, res) => {
     const postId = Number(req.params.id);
     siteData.posts = siteData.posts.filter(p => p.id !== postId);
@@ -128,7 +138,7 @@ app.post('/admin/delete-post/:id', adminAuth, (req, res) => {
 
 // 6. API YA KUTUMA MESEJI
 app.post('/api/contact', (req, res) => {
-    const { name, email, message }  = req.body;
+    const { name, email, message } = req.body;
     if (name && email && message) {
         siteData.messages.unshift({
             id: Date.now(),
