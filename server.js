@@ -49,7 +49,7 @@ let siteData = {
     messages: []
 };
 
-// ULINZI WA ADMIN (Basic Authentication)
+// ULINZI MKALI WA ADMIN (Basic Authentication)
 function adminAuth(req, res, next) {
     const authHeader = req.headers.authorization;
     
@@ -81,7 +81,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// 2. UKURASA WA ADMIN (Uliolindwa)
+// 2. UKURASA WA ADMIN (Uliolindwa na Nenosiri)
 app.get('/admin', adminAuth, (req, res) => {
     res.render('admin', { 
         announcement: siteData.announcement, 
@@ -90,7 +90,7 @@ app.get('/admin', adminAuth, (req, res) => {
     });
 });
 
-// 3. SASISHA TANGAZO (Announcement)
+// 3. SASISHA TANGAZO (Kimefungwa na Ulinzi)
 app.post('/admin/update-announcement', adminAuth, (req, res) => {
     if (req.body.announcement) {
         siteData.announcement = req.body.announcement.trim();
@@ -98,7 +98,7 @@ app.post('/admin/update-announcement', adminAuth, (req, res) => {
     res.redirect('/admin');
 });
 
-// 4. ONGEZA PICHA/KIVUTIO KIPYA
+// 4. ONGEZA PICHA/KIVUTIO KIPYA (Kimefungwa na Ulinzi)
 app.post('/admin/add-post', adminAuth, upload.single('image'), (req, res) => {
     const { title, imageUrl, description } = req.body;
     
@@ -114,21 +114,21 @@ app.post('/admin/add-post', adminAuth, upload.single('image'), (req, res) => {
             imageUrl: finalImageUrl,
             description
         };
-        siteData.posts.unshift(newPost); // Inaweka juu kabisa
+        siteData.posts.unshift(newPost);
     }
     res.redirect('/admin');
 });
 
-// 5. FUTA PICHA/KIVUTIO
+// 5. FUTA PICHA/KIVUTIO (Kimefungwa na Ulinzi)
 app.post('/admin/delete-post/:id', adminAuth, (req, res) => {
     const postId = Number(req.params.id);
     siteData.posts = siteData.posts.filter(p => p.id !== postId);
     res.redirect('/admin');
 });
 
-// 6. API YA KUTUMA MESEJI (Kama wageni watatuma ujumbe kutoka kwenye tovuti)
+// 6. API YA KUTUMA MESEJI
 app.post('/api/contact', (req, res) => {
-    const { name, email, message } = req.body;
+    const { name, email, message }  = req.body;
     if (name && email && message) {
         siteData.messages.unshift({
             id: Date.now(),
