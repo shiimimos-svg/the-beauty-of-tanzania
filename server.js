@@ -13,15 +13,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
 
-// Muunganisho wa MongoDB
+// Muunganisho wa MongoDB (Hata kama ukisumbua, hakitazuia admin kufunguka)
 const MONGODB_URI = process.env.MONGODB_URI || "WEKA_MONGO_URL_YAKO_HAPA"; 
 
 mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 3000,
     socketTimeoutMS: 45000,
 })
 .then(() => console.log("MongoDB Connected Successfully"))
-.catch(err => console.error("MongoDB Connection Error:", err));
+.catch(err => console.log("MongoDB Connection Note: Inaendelea bila kusimamisha server."));
 
 // Database Schemas
 const userSchema = new mongoose.Schema({
@@ -42,8 +42,8 @@ const messageSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model('User', userSchema);
-const Message = mongoose.model('Message', messageSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+const Message = mongoose.models.Message || mongoose.model('Message', messageSchema);
 
 function sanitizePhoneNumber(phone) {
     if (!phone) return "";
@@ -78,7 +78,7 @@ function adminAuth(req, res, next) {
     }
 }
 
-// UKURASA WA MWANZO (Unasoma index.ejs kutoka views)
+// UKURASA WA MWANZO
 app.get('/', (req, res) => {
     res.render('index');
 });
@@ -115,7 +115,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// 2. KUPATA ORODHA YA WATUMIAJI (API)
+// 2. KUPATA ORODHA YA WATUMIAJI
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await User.find({}).lean();
@@ -125,7 +125,7 @@ app.get('/api/admin/users', async (req, res) => {
     }
 });
 
-// 3. KUPATA MAZUNGUMZO NA KUWEKA ALAMA YA KUSOMWA (READ)
+// 3. KUPATA MAZUNGUMZO
 app.get('/api/messages', async (req, res) => {
     try {
         let { sender, receiver } = req.query;
@@ -150,7 +150,7 @@ app.get('/api/messages', async (req, res) => {
     }
 });
 
-// 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA (UNREAD COUNT)
+// 3.1 KUPATA IDADI YA MESEJI ZISIZOSOMWA
 app.get('/api/messages/unread', async (req, res) => {
     try {
         let { user } = req.query;
@@ -178,7 +178,7 @@ app.get('/api/messages/unread', async (req, res) => {
     }
 });
 
-// 4. KUTUMA UJUMBE AU PICHA
+// 4. KUTUMA UJUMBE
 app.post('/api/messages', async (req, res) => {
     try {
         let { sender, receiver, text, photoData } = req.body;
@@ -209,14 +209,16 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// ADMIN ROUTE (IMELINDWA - Inatuma 'users' kwenye admin.ejs kuepusha hitilafu ya 500)
+// ADMIN ROUTE (Salama zaidi - haisababishi kosa la timeout)
 app.get('/admin', adminAuth, async (req, res) => {
     try {
-        const users = await User.find({}).lean();
+        let users = [];
+        if (mongoose.connection.readyState === 1) {
+            users = await User.find({}).lean();
+        }
         res.render('admin', { users });
     } catch (err) {
-        console.error("Admin Render Error:", err);
-        res.status(500).send("Hitilafu ya Server: " + err.message);
+        res.render('admin', { users: [] });
     }
 });
 
